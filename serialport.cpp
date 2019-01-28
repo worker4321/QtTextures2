@@ -71,7 +71,8 @@ void SerialPort::handleError(QSerialPort::SerialPortError error)
 
 void SerialPort::closeSerialPort()
 {
-    m_serialPort->close();
+   if(m_serialPort->isOpen())
+       m_serialPort->close();
     qDebug() << tr("closed");
 }
 void SerialPort::write(const QByteArray &writeData)
@@ -181,7 +182,19 @@ void SerialPort::parseFrame(void)
  //   delete [] data;
 }
 
+void SerialPort::run()
+{
+    while(!quit){
+        msleep(100);
+      }
 
+    closeSerialPort();
+    m_serialPort = NULL;
+     qDebug("thread exit");
+    exit();
+
+
+}
 SerialPort::~SerialPort()
 {
     closeSerialPort();

@@ -52,13 +52,15 @@
 
 #include "glwidget.h"
 #include "window.h"
+#include <serialport.h>
+#include <QtSerialPort/QSerialPortInfo>
 
 Window::Window()
 {
 
     QHBoxLayout *mainLayout = new QHBoxLayout;
     QHBoxLayout *bomLayout = new QHBoxLayout;
-    QHBoxLayout *topLayout = new QHBoxLayout;
+    //QHBoxLayout *topLayout = new QHBoxLayout;
 
     //configMenu = menuBar()->addMenu(tr("&Config"));
     //configMenu->addAction(Serail);
@@ -72,34 +74,54 @@ Window::Window()
     QString manufacturer;
     QString serialNumber;
 
-    for (const QSerialPortInfo &serialPortInfo: serialPortInfos)
-    {
-        description = serialPortInfo.description();
-        manufacturer = serialPortInfo.manufacturer();
-        serialNumber = serialPortInfo.serialNumber();
-        out << endl
-            << "Port: " << serialPortInfo.portName() << endl
-            << "Location: " << serialPortInfo.systemLocation() << endl
-            << "Description: " << (!description.isEmpty() ? description : blankString) << endl
-            << "Manufacturer: " << (!manufacturer.isEmpty() ? manufacturer : blankString) << endl
-            << "Serial number: " << (!serialNumber.isEmpty() ? serialNumber : blankString) << endl
-            << "Vendor Identifier: " << (serialPortInfo.hasVendorIdentifier()
-                                         ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16)
-                                         : blankString) << endl
-            << "Product Identifier: " << (serialPortInfo.hasProductIdentifier()
-                                          ? QByteArray::number(serialPortInfo.productIdentifier(), 16)
-                                          : blankString) << endl
-            << "Busy: " << (serialPortInfo.isBusy() ? "Yes" : "No") << endl;
+    serialPortLabel= new QLabel(tr("port:"));
+    serialPortComboBox = new QComboBox();
+    statusLabel= new QLabel(tr("Status: Not running."));
+    runButton = new QPushButton(tr("Start"));
+    const auto infos = QSerialPortInfo::availablePorts();
+    for (const QSerialPortInfo &info : infos)
+        serialPortComboBox->addItem(info.portName());
+
+    //QHBoxLayout mainLayout = new QHBoxLayout;
+    mainLayout->addStretch();
+    mainLayout->setAlignment(Qt::AlignTop);
+    mainLayout->addWidget(serialPortLabel);
+    mainLayout->addWidget(serialPortComboBox);
+    mainLayout->addWidget(runButton);
+    mainLayout->addWidget(statusLabel);
+    setLayout(mainLayout);
+    setWindowTitle(tr("Serial"));
+    serialPortComboBox->setFocus();
+    connect(runButton, &QPushButton::clicked, this, &Window::BtnRun);
+    m_serialPort = NULL;
+//    for (const QSerialPortInfo &serialPortInfo: serialPortInfos)
+//    {
+//        description = serialPortInfo.description();
+//        manufacturer = serialPortInfo.manufacturer();
+//        serialNumber = serialPortInfo.serialNumber();
+//        out << endl
+//            << "Port: " << serialPortInfo.portName() << endl
+//            << "Location: " << serialPortInfo.systemLocation() << endl
+//            << "Description: " << (!description.isEmpty() ? description : blankString) << endl
+//            << "Manufacturer: " << (!manufacturer.isEmpty() ? manufacturer : blankString) << endl
+//            << "Serial number: " << (!serialNumber.isEmpty() ? serialNumber : blankString) << endl
+//            << "Vendor Identifier: " << (serialPortInfo.hasVendorIdentifier()
+//                                         ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16)
+//                                         : blankString) << endl
+//            << "Product Identifier: " << (serialPortInfo.hasProductIdentifier()
+//                                          ? QByteArray::number(serialPortInfo.productIdentifier(), 16)
+//                                          : blankString) << endl
+//            << "Busy: " << (serialPortInfo.isBusy() ? "Yes" : "No") << endl;
 
 
-    m_serialPort = new SerialPort(serialPortInfo.portName());
-    break;
-    }
-    if(!m_serialPort)
-    {
-        qDebug()<<"new serialPort failed,exit"<<endl;
-        exit(-1);
-    }
+//    m_serialPort = new SerialPort(serialPortInfo.portName());
+//    break;
+//    }
+//    if(!m_serialPort)
+//    {
+//        qDebug()<<"new serialPort failed,exit"<<endl;
+//        exit(-1);
+//    }
 
 
     for (int i = 0; i < NumRows; ++i)
@@ -179,7 +201,25 @@ Window::Window()
 
     connect(m_magLabel, SIGNAL(setQlabel()), this, SLOT(senddata()));
 }
-
+void Window::BtnRun(void)
+{
+  if( m_serialPort){
+       //serial->closeSerialPort();
+       //m_serialPort->setBusy(true);
+       m_serialPort->quit = true;
+       //m_serialPort = NULL;
+       runButton->setText("closed");
+  }else{
+      QString com = serialPortComboBox->currentText();
+      m_serialPort = new SerialPort(com);
+      if(!m_serialPort){
+          qDebug()<<"new serialPort failed,exit"<<endl;
+          return;
+      }
+      m_serialPort->start();
+      runButton->setText("running");
+  }
+}
 void Window::setCurrentGlWidget()
 {
     currentGlWidget = qobject_cast<GLWidget *>(sender());
@@ -187,6 +227,9 @@ void Window::setCurrentGlWidget()
 
 void Window::rotateOneStep()
 {
+    if(!m_serialPort)
+      return;
+
     if (currentGlWidget)
         currentGlWidget->rotateBy(m_serialPort->EulerAngles[0], m_serialPort->EulerAngles[1], m_serialPort->EulerAngles[2]);
 

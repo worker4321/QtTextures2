@@ -30,6 +30,7 @@ public:
 
     //dataParseFrame pFrame;
     //QByteArray RcvBuf;
+    bool quit = false;
     QQuaternion Q4;
     float EulerAngles[3];
     int openSerialPort();
@@ -55,7 +56,7 @@ private slots:
     void handleBytesWritten(qint64 bytes);
 
 protected:
- //   void run();
+    void run();
     QString m_comName;
  //   bool busy;
 };

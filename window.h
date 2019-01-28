@@ -52,10 +52,15 @@
 #define WINDOW_H
 
 #include <QWidget>
-#include "serialport.h"
 #include <QMainWindow>
 #include <QMouseEvent>
-
+#include <QDebug>
+#include <QLabel>
+#include <QLineEdit>
+#include <QComboBox>
+#include <QPushButton>
+#include <QHBoxLayout>
+#include "serialport.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -79,6 +84,7 @@ signals:
 private slots:
     void setCurrentGlWidget();
     void rotateOneStep();
+    void BtnRun(void);
 
 public slots:
     void senddata();
@@ -94,6 +100,14 @@ private:
     QLabel *m_angleLabel;
     QLabel *m_magLabel;
     QPixmap *m_magPixmap;//(":/images/mag1.png");
+    //for serialPort
+    //serialPort *serial;
+    QLabel *serialPortLabel;
+    QComboBox *serialPortComboBox;
+    QLabel *waitRequestLabel;
+    QLabel *statusLabel;
+    QPushButton *runButton;
+
 
 public:
     void mouseDoubleClickEvent(QMouseEvent*);
