@@ -73,7 +73,9 @@ void SerialPort::closeSerialPort()
 {
    if(m_serialPort->isOpen())
        m_serialPort->close();
-    qDebug() << tr("closed");
+
+   // qDebug() << "closed";
+   // m_serialPort = NULL;
 }
 void SerialPort::write(const QByteArray &writeData)
 {
@@ -188,14 +190,10 @@ void SerialPort::run()
         msleep(100);
       }
 
-    closeSerialPort();
-    m_serialPort = NULL;
-     qDebug("thread exit");
-    exit();
-
-
 }
 SerialPort::~SerialPort()
 {
-    closeSerialPort();
+  closeSerialPort();
+  this->deleteLater();
+
 }

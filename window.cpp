@@ -76,7 +76,7 @@ Window::Window()
 
     serialPortLabel= new QLabel(tr("port:"));
     serialPortComboBox = new QComboBox();
-    statusLabel= new QLabel(tr("Status: Not running."));
+    statusLabel= new QLabel(tr("Status: Not running."));  statusLabel->setHidden(true);
     runButton = new QPushButton(tr("Start"));
     const auto infos = QSerialPortInfo::availablePorts();
     for (const QSerialPortInfo &info : infos)
@@ -203,10 +203,13 @@ Window::Window()
 }
 void Window::BtnRun(void)
 {
-  if( m_serialPort){
+  QString status = runButton->text();
+  if(  status == "running"){
        //serial->closeSerialPort();
        //m_serialPort->setBusy(true);
        m_serialPort->quit = true;
+       //statusLabel->setText("closed");
+       delete m_serialPort;
        //m_serialPort = NULL;
        runButton->setText("closed");
   }else{
@@ -218,6 +221,7 @@ void Window::BtnRun(void)
       }
       m_serialPort->start();
       runButton->setText("running");
+      //statusLabel->setText("runing");
   }
 }
 void Window::setCurrentGlWidget()
@@ -227,7 +231,7 @@ void Window::setCurrentGlWidget()
 
 void Window::rotateOneStep()
 {
-    if(!m_serialPort)
+    if(runButton->text() != "running")
       return;
 
     if (currentGlWidget)
